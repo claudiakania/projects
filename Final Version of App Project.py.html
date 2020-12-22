@@ -1,0 +1,459 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from csv import reader
+opened_appl = open('AppleStore.csv')
+opened_goog = open('googleplaystore.csv')
+read_appl = reader(opened_appl)
+read_goog = reader(opened_goog)
+appl_rows = list(read_appl)
+goog_rows = list(read_goog)
+appl = appl_rows[1::] #header types not included here
+goog = goog_rows[1::] #header types not included here
+
+
+# In[2]:
+
+
+#This is a function that lets
+#us explore data in a readable manner, with an evenly spaced header with column names. 
+def explore_data(dataset, start, end, rows_and_columns=False):
+    dataset_slice = dataset[start:end]    
+    for row in dataset_slice:
+        print(row)
+        print('\n') # adds a new (empty) line after each row
+
+    if rows_and_columns:
+        print('Number of rows:', len(dataset))
+        print('Number of columns:', len(dataset[0]))
+
+
+# In[3]:
+
+
+explore_data(appl_rows, 0, -1)
+
+
+# In[4]:
+
+
+explore_data(goog_rows, 0, -1) 
+
+
+# In[5]:
+
+
+#From the Kaggle forum, we know that the Google set has
+#an error in row 10472(head not included). We will
+#next clean this data set, first by removing this row
+#witch has a missing column.
+
+
+# In[6]:
+
+
+#check error
+print(goog[10472])
+
+
+# In[7]:
+
+
+#category type not present
+#next step = deleting this row
+
+
+# In[8]:
+
+
+del goog[10472]
+
+
+# In[9]:
+
+
+#the google data set has duplicate entries. 
+#this is the code that proves it:
+
+
+# In[10]:
+
+
+for app in goog:
+    name = app[0]
+    if name == 'Instagram':
+        print(app)
+        
+    
+
+
+# In[11]:
+
+
+for app in goog:
+    name = app[0]
+    if name == 'Facebook':
+        print(app)
+        
+
+
+# In[12]:
+
+
+#FB and Insta are stored multiple times
+
+
+# In[13]:
+
+
+# the following code will count the number of dups
+#in the goog store and store it as a frequency table, then it will print the name of the dups
+# and the amount of times they appear (which is more than once)
+
+
+# In[14]:
+
+
+goog_freq = {}
+for app in goog:
+    name = app[0]
+    if name in goog_freq:
+        goog_freq[name] += 1
+
+    elif name not in goog_freq:
+        goog_freq[name] = 1
+    if goog_freq[name] > 1:
+        print(name, goog_freq[name])
+
+
+    
+
+
+# In[15]:
+
+
+## we wil remove duplicates of apps based on review criteria
+#the more reviews an app has, the more recent the version is, and that will be the version we keep
+
+
+# In[16]:
+
+
+reviews_max = {} #this function keeps the version with the greatest num of reviews
+for app in goog:
+    name = app[0]
+    n_reviews = float(app[3])
+    if name in reviews_max and reviews_max[name] < n_reviews:
+        reviews_max[name] = n_reviews
+    elif name not in reviews_max:
+        reviews_max[name] = n_reviews
+
+
+# In[17]:
+
+
+print(reviews_max)
+
+
+# In[18]:
+
+
+print(len(reviews_max))
+
+
+# In[19]:
+
+
+android_clean = [] #creates clean data set for goog w/o dups
+already_added = [] #stores names of apps added to the list
+for app in goog:
+    name = app[0]
+    n_reviews = float(app[3])
+    if n_reviews == reviews_max[name] and name not in already_added:
+        android_clean.append(app)
+        already_added.append(name)
+    googles = android_clean
+
+
+# In[20]:
+
+
+print(len(googles)) 
+#the num of rows in the clean goog data set
+
+
+# In[21]:
+
+
+for app in android_clean:
+    string = app[0]
+    print(string)
+
+
+# In[22]:
+
+
+#the above is an extraction of all the names of apps
+
+
+# In[23]:
+
+
+for app in appl:
+    print(app[1]) #just a quick check to see the names category and scan through name languages
+
+
+# In[24]:
+
+
+#next we will create clean lists of only the english apps in android_clean and appl
+
+
+# In[25]:
+
+
+android_english = [] #creates clean data set for english android apps
+for app in android_clean:
+    non_english = []
+    name = app[0]
+    for char in name:
+        if ord(char) > 127:
+            non_english.append(char)
+    if len(non_english) < 3:
+        android_english.append(app)
+            
+            
+                
+            
+
+
+# In[26]:
+
+
+print(len(android_english))
+
+
+# In[27]:
+
+
+apple_english = [] #creates clean data set for english apps
+for app in appl:
+    non_english = []
+    name = app[1]
+    for char in name:
+        if ord(char) > 127:
+            non_english.append(char)
+    if len(non_english) < 3:
+        apple_english.append(app)
+            
+
+
+# In[28]:
+
+
+print(len(apple_english))
+
+
+# In[29]:
+
+
+for app in android_english:
+    name = app[0]
+    print(name)
+
+
+# In[30]:
+
+
+for app in apple_english:
+    name = app[1]
+    print(name)
+
+
+# In[31]:
+
+
+## our checks pass; apple_english and android_english are our new stores
+
+
+# In[32]:
+
+
+#our next task is isolating the free apps from each store
+
+
+# In[33]:
+
+
+free_apple = []
+for app in apple_english:
+    price = app[4]
+    if price == '0.0':
+        free_apple.append(app)
+
+
+# In[34]:
+
+
+explore_data(free_apple, 0 ,-1) #our check passed
+
+
+# In[35]:
+
+
+free_google = []
+for app in android_english:
+    price = app[6]
+    if price == 'Free':
+        free_google.append(app)
+
+
+# In[36]:
+
+
+explore_data(free_google, 0 ,-1) #second check passed
+
+
+# In[37]:
+
+
+#updated newest stores: free_google and free_apple
+
+
+# In[38]:
+
+
+print(len(free_apple)) #how many apps we have left
+
+
+# In[39]:
+
+
+print(len(free_google)) #how many apps we have left
+
+
+# In[40]:
+
+
+def freq_table(dataset, index):
+    table = {}
+    for app in dataset:
+        column = app[index]
+        if app[index] in table:
+            table[app[index]] +=1
+        elif app[index] not in table:
+            table[app[index]] =1
+    print(table)
+        
+
+
+# In[41]:
+
+
+print(appl_rows[0]) #rereading the header categories
+print(goog_rows[0])
+
+
+# In[42]:
+
+
+# apple prime_genre = [11]
+# google category = [1]    AND  genres = [9] 
+
+
+# In[43]:
+
+
+freq_table(free_apple, 11) ##most common: games
+
+
+# In[44]:
+
+
+freq_table(free_google, 1) #most common: Game, Family, other productive apps (a bit diff than apple)
+
+
+# In[45]:
+
+
+freq_table(free_google, 9) #most common: entertainment
+
+
+# Analysis: The app profiles that are the most frequent for both stores of data (Android and Apple) are those in the Games and Enterainment categories. However, it is also fair to note that the gooel app landscape is more balanced, and contains a more distributed frequency tally. 
+
+# In[46]:
+
+
+#in the next segment, I will find the apps with the 
+#amount of users by genre. Since the installs column
+#is missing from apple, I will instead use number of ratings
+
+
+# In[89]:
+
+
+genre_lib = {}
+for app in free_apple:
+    genre = app[11]
+    users = float(app[5])
+    if genre not in genre_lib:
+        genre_lib[genre] = users
+print(genre_lib)
+print(max(genre_lib,key=genre_lib.get)) #this part of the function finds the key with
+                                            ##the largest value, which is social networking
+
+
+# In[52]:
+
+
+#the above code lets us know how many reviews per category in the apple store
+
+
+# In[87]:
+
+
+genre_lib = {}
+for app in free_google:
+    genre = app[1]
+    users = app[5]
+    if genre not in genre_lib:
+        genre_lib[genre] = users
+print(genre_lib)
+
+
+# In[81]:
+
+
+#the above code tells us the amount of installs per categort in the goog play store
+
+
+# In[82]:
+
+
+genre_lib = {}
+for app in free_google:
+    genre = app[9]
+    users = app[5]
+    if genre not in genre_lib:
+        genre_lib[genre] = users
+print(genre_lib)
+
+
+# In[83]:
+
+
+#the above info tells us the amount of installs per GENRES in the goog play store
+
+
+# FINAL app profile recommendation based on amount of users:
+#     Google Play Store: Social, Communication, Tools, Video Players
+#     \\\\ N // Apple Store: Social Networking (greatest amount of reviews using max function)
+
+# In[ ]:
+
+
+
+
